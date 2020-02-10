@@ -59,3 +59,40 @@ a {
   padding: 20px;
   width: 100%;
 }
+
+ul {
+  border-bottom: 2px solid #43a3e6;
+  height: 30px;
+  padding: 1em 0;
+  list-style-type: none;
+}
+
+ul li {
+  line-height: 20px;
+}
+
+#to-right {
+  padding: 1em;
+  float: right;
+}
+
+#to-right span {
+  color: #43a3e6;
+  font-size: 1.5em;
+}
+
+#form h2 {
+  display: flex;
+  justify-content: center;
+}
+
+#to-left {
+  padding: 1em;
+  float: left;
+  
+}
+
+#to-left a {
+  color: #43a3e6;
+  font-size: 1.5em;
+}

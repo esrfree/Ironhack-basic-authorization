@@ -3,9 +3,14 @@ const router     = new Router();
 const User       = require("../models/user"); // User model
 const mongoose   = require('mongoose');
 
+// Middleware
+const routeGuard = require('../configs/route-guard-config');
+
 // BCrypt to encrypt passwords
 const bcryptjs = require('bcryptjs');
 const bcryptSalt = 10;
+
+/************ AUTHORIZATION **************/
 
 /* GET signup page */
 router.get('/signup', (req, res, next) => {
@@ -51,7 +56,7 @@ router.post('/signup', (req, res, next) => {
   })
   .catch(error => {
     console.log( error.message);
-    res.render('auth/signup', { errorMessage: error.message });
+    res.render('auth/signup', { errorMessage: error.message });  // using mongoose-unique-validator implemented in the model
     //if (error instanceof mongoose.Error.ValidationError) {
     //  res.status(500).render('auth/signup', { errorMessage: error.message });
     //} 
@@ -66,7 +71,50 @@ router.post('/signup', (req, res, next) => {
   })
 })
 
-// User profile page
-router.get('/userProfile', (req, res) => res.render('user/user-profile'));
+/************ AUTHENTICATION **************/
+
+// GET login page
+router.get("/login", (req, res, next) => {
+  res.render("auth/login");
+});
+
+// POST user authentication (login)
+router.post('/login', (req, res, next) => {
+  const { username, password } = req.body;
+
+  if ( !username || !password ) {
+    res.render("auth/login", {
+      errorMessage: "Please enter both, username and password to sign up."
+    });
+    return;
+  }
+
+  User.findOne( { username })
+  .then( user => {
+    if ( !user ) {
+      res.render('auth/login', { errorMessage: `The username doesn't exists.`});
+      return;
+    }
+    else if ( bcryptjs.compareSync( password, user.passwordHash )) {      
+      req.session.currentUser = user;                           //Save the login in the session!
+      res.redirect('/userProfile')
+    }
+    else {
+      res.render('auth/login', { errorMessage: `Incorrect password.`})
+    }
+  })
+  .catch( err => next( err ))
+});
+
+// POST logout
+router.post('/logout', routeGuard, (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+// GET user profile page
+router.get('/userProfile', routeGuard, (req, res) => {
+  res.render( 'user/user-profile')
+})
 
 module.exports = router;

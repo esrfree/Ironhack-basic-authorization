@@ -8,31 +8,30 @@ const hbs          = require('hbs');
 const mongoose     = require('mongoose');
 const logger       = require('morgan');
 const path         = require('path');
+const localUserSession = require('./configs/local-session-config');
 
 
-mongoose
-  .connect('mongodb://localhost/basic-auth', {useNewUrlParser: true})
-  .then(x => {
-    console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`)
-  })
-  .catch(err => {
-    console.error('Error connecting to mongo', err)
-  });
+// Set up the database
+require('./configs/db-config');
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
 
+// server app creation
 const app = express();
+
+// use session here
+require('./configs/sessions-config')(app);
 
 // Middleware Setup
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-require('./configs/sessions-config')(app); // use session here
+app.use(localUserSession);
+
 
 // Express View engine setup
-
 app.use(require('node-sass-middleware')({
   src:  path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
@@ -52,8 +51,8 @@ app.locals.title = 'Express - Generated with IronGenerator';
 
 
 // Routers
-const index = require('./routes/index');
-const auth = require('./routes/auth');
+const index = require('./routes/index-routes');
+const auth = require('./routes/auth-routes');
 app.use(index);
 app.use(auth);
 
